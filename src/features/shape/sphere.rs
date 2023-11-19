@@ -1,4 +1,4 @@
-use crate::features::{matrice::Matrice, point::Point};
+use crate::features::{matrice::Matrice, point::Point, vector::Vector};
 
 use super::Shape;
 
@@ -41,6 +41,13 @@ impl Shape for Sphere {
 
     fn set_transform(&mut self, transform: Matrice) {
         self.transform = transform;
+    }
+
+    fn normal_at(&self, world_point: Point) -> Option<Vector> {
+        let object_point = self.transform.inverse()? * world_point;
+        let object_normal = object_point - Point::new(0.0, 0.0, 0.0);
+        let world_normal = self.transform.inverse()?.transpose() * object_normal;
+        Some(world_normal.normalize())
     }
 }
 
@@ -112,5 +119,92 @@ mod sphere_shape_trait_tests {
         let t = translation(2.0, 3.0, 4.0);
         s.set_transform(t.clone());
         assert_eq!(s.transform, t);
+    }
+}
+
+#[cfg(test)]
+mod normals_tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI};
+
+    use crate::features::transormations::{rotation_z, scaling, translation};
+
+    use super::*;
+
+    #[test]
+    fn on_x_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Point::new(1.0, 0.0, 0.0)).unwrap();
+        assert_eq!(n, Vector::new(1.0, 0.0, 0.0))
+    }
+
+    #[test]
+    fn on_y_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Point::new(0.0, 1.0, 0.0)).unwrap();
+        assert_eq!(n, Vector::new(0.0, 1.0, 0.0))
+    }
+
+    #[test]
+    fn z_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Point::new(0.0, 0.0, 1.0)).unwrap();
+        assert_eq!(n, Vector::new(0.0, 0.0, 1.0))
+    }
+
+    #[test]
+    fn on_nonaxial() {
+        let s = Sphere::new();
+        let n = s
+            .normal_at(Point::new(
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+            ))
+            .unwrap();
+        assert_eq!(
+            n,
+            Vector::new(
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+            )
+        )
+    }
+    #[test]
+    fn is_normalized() {
+        let s = Sphere::new();
+        let n = s
+            .normal_at(Point::new(
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+                3.0_f64.sqrt() / 3.0,
+            ))
+            .unwrap();
+        assert_eq!(n, n.normalize());
+    }
+
+    #[test]
+    fn translated_sphere() {
+        let mut s = Sphere::new();
+        s.set_transform(translation(0.0, 1.0, 0.0));
+        let n = s
+            .normal_at(Point::new(0.0, 1.70711, -FRAC_1_SQRT_2))
+            .unwrap();
+        assert_eq!(n, Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2));
+    }
+
+    #[test]
+    fn transformed_sphere() {
+        let mut s = Sphere::new();
+        let m = scaling(1.0, 0.5, 1.0) * rotation_z(PI / 5.0);
+        s.set_transform(m);
+        let n = s
+            .normal_at(Point::new(
+                0.0,
+                2.0_f64.sqrt() / 2.0,
+                -(2.0_f64.sqrt() / 2.0),
+            ))
+            .unwrap();
+        assert_eq!(n, Vector::new(0.0, 0.97014, -0.24254));
     }
 }

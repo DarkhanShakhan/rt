@@ -23,10 +23,6 @@ impl Tuple {
     pub fn dot(&self, other: &Tuple) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
-
-    pub fn reflect(&self, normal: &Self) -> Self {
-        *self - *normal * 2.0 * self.dot(normal)
-    }
 }
 
 impl PartialEq for Tuple {

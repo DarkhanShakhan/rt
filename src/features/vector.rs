@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::{point::Point, tuple::Tuple};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct Vector {
     pub position: Tuple,
 }
@@ -31,6 +31,9 @@ impl Vector {
             self.position.z * rhs.position.x - self.position.x * rhs.position.z,
             self.position.x * rhs.position.y - self.position.y * rhs.position.x,
         ))
+    }
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - *normal * 2.0 * self.dot_product(normal)
     }
 }
 
@@ -86,5 +89,26 @@ impl Mul<f64> for Vector {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Vector::from(self.position * rhs)
+    }
+}
+
+#[cfg(test)]
+mod reflect_tests {
+    use super::*;
+
+    #[test]
+    fn at_45() {
+        let v = Vector::new(1.0, -1.0, 0.0);
+        let n = Vector::new(0.0, 1.0, 0.0);
+        let r = v.reflect(&n);
+        assert_eq!(r, Vector::new(1.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn slanted_surface() {
+        let v = Vector::new(0.0, -1.0, 0.0);
+        let n = Vector::new(2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0.0);
+        let r = v.reflect(&n);
+        assert_eq!(r, Vector::new(1.0, 0.0, 0.0));
     }
 }
