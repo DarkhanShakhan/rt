@@ -2,12 +2,15 @@ use std::ops::{Add, Mul, Neg, Sub};
 
 use super::tuple::Tuple;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     pub rgb: Tuple,
 }
 
 impl Color {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Color::from(Tuple::new(x, y, z))
+    }
     pub fn clamp(&self) -> Self {
         let mut x = self.rgb.x * 255.0;
         let mut y = self.rgb.y * 255.0;

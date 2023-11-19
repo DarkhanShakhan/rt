@@ -2,6 +2,8 @@ pub mod canvas;
 pub mod color;
 pub mod consts;
 pub mod intersection;
+pub mod light;
+pub mod material;
 pub mod matrice;
 pub mod point;
 pub mod ray;

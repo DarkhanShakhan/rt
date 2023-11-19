@@ -38,7 +38,7 @@ mod intersection_tests {
     use crate::features::{point::Point, shape::sphere::Sphere, vector::Vector};
     #[test]
     fn intersection_encapsulates_t_and_object() {
-        let sphere = Rc::new(Sphere::new());
+        let sphere = Rc::new(Sphere::default());
         let ix = Intersection::new(sphere.clone(), 3.5);
         assert_eq!(ix.t, 3.5);
         assert_eq!(sphere, ix.shape);
@@ -52,7 +52,7 @@ mod hit_tests {
     use super::*;
     #[test]
     fn all_intersections_have_positive_t() {
-        let sphere = Rc::new(Sphere::new());
+        let sphere = Rc::new(Sphere::default());
         let i1 = Intersection::new(sphere.clone(), 1.0);
         let i2 = Intersection::new(sphere.clone(), 2.0);
         let mut xs = vec![i1, i2];
@@ -62,7 +62,7 @@ mod hit_tests {
     }
     #[test]
     fn some_intersections_have_negative_t() {
-        let sphere = Rc::new(Sphere::new());
+        let sphere = Rc::new(Sphere::default());
         let i1 = Intersection::new(sphere.clone(), -1.0);
         let i2 = Intersection::new(sphere.clone(), 1.0);
         let mut xs = vec![i1, i2];
@@ -73,7 +73,7 @@ mod hit_tests {
 
     #[test]
     fn when_all_intersections_have_negative_t() {
-        let sphere = Rc::new(Sphere::new());
+        let sphere = Rc::new(Sphere::default());
         let i1 = Intersection::new(sphere.clone(), -2.0);
         let i2 = Intersection::new(sphere.clone(), -1.0);
         let mut xs = vec![i1, i2];
@@ -83,7 +83,7 @@ mod hit_tests {
 
     #[test]
     fn always_the_lowest_nonnegative_intersection() {
-        let sphere = Rc::new(Sphere::new());
+        let sphere = Rc::new(Sphere::default());
         let i1 = Intersection::new(sphere.clone(), 5.0);
         let i2 = Intersection::new(sphere.clone(), 7.0);
         let i3 = Intersection::new(sphere.clone(), -3.0);

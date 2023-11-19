@@ -1,25 +1,25 @@
-use crate::features::{matrice::Matrice, point::Point, vector::Vector};
+use crate::features::{material::Material, matrice::Matrice, point::Point, vector::Vector};
 
 use super::Shape;
 
 #[derive(Debug, PartialEq)]
 pub struct Sphere {
     transform: Matrice,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new() -> Self {
+    pub fn new(transform: Matrice, material: Material) -> Self {
         Sphere {
-            transform: Matrice::identity_matrix(4),
+            transform,
+            material,
         }
     }
 }
 
 impl Default for Sphere {
     fn default() -> Self {
-        Sphere {
-            transform: Matrice::identity_matrix(4),
-        }
+        Sphere::new(Matrice::identity_matrix(4), Material::default())
     }
 }
 
@@ -42,6 +42,12 @@ impl Shape for Sphere {
     fn set_transform(&mut self, transform: Matrice) {
         self.transform = transform;
     }
+    fn set_material(&mut self, material: Material) {
+        self.material = material;
+    }
+    fn get_material(&self) -> Material {
+        self.material.clone()
+    }
 
     fn normal_at(&self, world_point: Point) -> Option<Vector> {
         let object_point = self.transform.inverse()? * world_point;
@@ -59,7 +65,7 @@ mod sphere_intersects_tests {
     #[test]
     fn ray_intersects_sphere_at_two_points() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let xs = s.intersect(&r).unwrap();
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0], 4.0);
@@ -68,7 +74,7 @@ mod sphere_intersects_tests {
     #[test]
     fn ray_intersects_sphere_at_tangent() {
         let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let xs = s.intersect(&r).unwrap();
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0], 5.0);
@@ -77,14 +83,14 @@ mod sphere_intersects_tests {
     #[test]
     fn ray_misses_sphere() {
         let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let xs = s.intersect(&r);
         assert_eq!(xs, None);
     }
     #[test]
     fn ray_originates_inside_sphere() {
         let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let xs = s.intersect(&r).unwrap();
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0], -1.0);
@@ -94,7 +100,7 @@ mod sphere_intersects_tests {
     #[test]
     fn sphere_behind_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let xs = s.intersect(&r).unwrap();
         assert_eq!(xs.len(), 2);
         assert_eq!(xs[0], -6.0);
@@ -120,6 +126,22 @@ mod sphere_shape_trait_tests {
         s.set_transform(t.clone());
         assert_eq!(s.transform, t);
     }
+
+    #[test]
+    fn default_material() {
+        let s = Sphere::default();
+        assert_eq!(s.material, Material::default())
+    }
+    #[test]
+    fn material_assigned() {
+        let mut s = Sphere::default();
+        let m = Material {
+            ambient: 1.0,
+            ..Default::default()
+        };
+        s.material = m.clone();
+        assert_eq!(s.material, m);
+    }
 }
 
 #[cfg(test)]
@@ -132,28 +154,28 @@ mod normals_tests {
 
     #[test]
     fn on_x_axis() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let n = s.normal_at(Point::new(1.0, 0.0, 0.0)).unwrap();
         assert_eq!(n, Vector::new(1.0, 0.0, 0.0))
     }
 
     #[test]
     fn on_y_axis() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let n = s.normal_at(Point::new(0.0, 1.0, 0.0)).unwrap();
         assert_eq!(n, Vector::new(0.0, 1.0, 0.0))
     }
 
     #[test]
     fn z_axis() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let n = s.normal_at(Point::new(0.0, 0.0, 1.0)).unwrap();
         assert_eq!(n, Vector::new(0.0, 0.0, 1.0))
     }
 
     #[test]
     fn on_nonaxial() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let n = s
             .normal_at(Point::new(
                 3.0_f64.sqrt() / 3.0,
@@ -172,7 +194,7 @@ mod normals_tests {
     }
     #[test]
     fn is_normalized() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let n = s
             .normal_at(Point::new(
                 3.0_f64.sqrt() / 3.0,
@@ -185,7 +207,7 @@ mod normals_tests {
 
     #[test]
     fn translated_sphere() {
-        let mut s = Sphere::new();
+        let mut s = Sphere::default();
         s.set_transform(translation(0.0, 1.0, 0.0));
         let n = s
             .normal_at(Point::new(0.0, 1.70711, -FRAC_1_SQRT_2))
@@ -195,7 +217,7 @@ mod normals_tests {
 
     #[test]
     fn transformed_sphere() {
-        let mut s = Sphere::new();
+        let mut s = Sphere::default();
         let m = scaling(1.0, 0.5, 1.0) * rotation_z(PI / 5.0);
         s.set_transform(m);
         let n = s
