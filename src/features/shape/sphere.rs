@@ -48,7 +48,9 @@ impl Shape for Sphere {
     fn get_material(&self) -> Material {
         self.material.clone()
     }
-
+    fn get_transform(&self) -> Matrice {
+        self.transform.clone()
+    }
     fn normal_at(&self, world_point: Point) -> Option<Vector> {
         let object_point = self.transform.inverse()? * world_point;
         let object_normal = object_point - Point::new(0.0, 0.0, 0.0);

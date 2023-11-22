@@ -1,5 +1,6 @@
 pub mod canvas;
 pub mod color;
+pub mod computation;
 pub mod consts;
 pub mod intersection;
 pub mod light;
@@ -11,3 +12,4 @@ pub mod shape;
 pub mod transormations;
 pub mod tuple;
 pub mod vector;
+pub mod world;
