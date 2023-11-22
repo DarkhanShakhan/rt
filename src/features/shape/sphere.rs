@@ -1,9 +1,12 @@
+use uuid::Uuid;
+
 use crate::features::{material::Material, matrice::Matrice, point::Point, vector::Vector};
 
 use super::Shape;
 
 #[derive(Debug, PartialEq)]
 pub struct Sphere {
+    id: String,
     transform: Matrice,
     material: Material,
 }
@@ -13,6 +16,7 @@ impl Sphere {
         Sphere {
             transform,
             material,
+            id: Uuid::new_v4().to_string(),
         }
     }
 }
@@ -50,6 +54,9 @@ impl Shape for Sphere {
     }
     fn get_transform(&self) -> Matrice {
         self.transform.clone()
+    }
+    fn get_shape_id(&self) -> String {
+        self.id.clone()
     }
     fn normal_at(&self, world_point: Point) -> Option<Vector> {
         let object_point = self.transform.inverse()? * world_point;

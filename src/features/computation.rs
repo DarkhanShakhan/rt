@@ -8,25 +8,34 @@ use super::{
     vector::Vector,
 };
 
-pub struct Computation<S: Shape> {
+pub struct Computation {
     pub t: f64,
-    pub object: Rc<S>,
+    pub object_id: String,
     pub point: Point,
     pub eyev: Vector,
     pub normalv: Vector,
+    pub inside: bool,
 }
 
-impl<S: Shape> Computation<S> {
-    pub fn new(ray: &Ray, i: &Intersection<S>) -> Self {
+impl Computation {
+    pub fn new(ray: &Ray, i: &Intersection, s: &Box<dyn Shape>) -> Self {
         let point = ray.position(i.t);
         let eyev = -ray.direction;
-        let normalv = i.shape.normal_at(point).unwrap_or_default();
+        let mut normalv = s.normal_at(point).unwrap_or_default();
+        let inside: bool;
+        if normalv.dot_product(&eyev) < 0.0 {
+            inside = true;
+            normalv = -normalv;
+        } else {
+            inside = false;
+        }
         Computation {
             t: i.t,
-            object: i.shape.clone(),
+            object_id: i.shape_id.clone(),
             point,
             eyev,
             normalv,
+            inside,
         }
     }
 }
@@ -39,12 +48,36 @@ mod computation_tests {
     #[test]
     fn precompute_state_of_intersection() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let shape = Sphere::default();
-        let i = Intersection::new(Rc::new(shape), 4.0);
-        let comps = Computation::new(&r, &i);
+        let shape: Box<dyn Shape> = Box::new(Sphere::default());
+        let i = Intersection::new(shape.get_shape_id(), 4.0);
+        let comps = Computation::new(&r, &i, &shape);
         assert_eq!(comps.t, i.t);
-        assert_eq!(comps.object, i.shape);
+        assert_eq!(comps.object_id, i.shape_id);
         assert_eq!(comps.eyev, Vector::new(0.0, 0.0, -1.0));
         assert_eq!(comps.normalv, Vector::new(0.0, 0.0, -1.0));
+    }
+
+    #[test]
+    fn intersection_outside() {
+        let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let shape: Box<dyn Shape> = Box::new(Sphere::default());
+        let i = Intersection::new(shape.get_shape_id(), 1.0);
+        let comps = Computation::new(&r, &i, &shape);
+        assert_eq!(comps.eyev, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(comps.normalv, Vector::new(0.0, 0.0, -1.0));
+        assert!(comps.inside);
+        assert_eq!(comps.point, Point::new(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn intersection_inside() {
+        let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let shape: Box<dyn Shape> = Box::new(Sphere::default());
+        let i = Intersection::new(shape.get_shape_id(), 1.0);
+        let comps = Computation::new(&r, &i, &shape);
+        assert_eq!(comps.eyev, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(comps.normalv, Vector::new(0.0, 0.0, -1.0));
+        assert!(comps.inside);
+        assert_eq!(comps.point, Point::new(0.0, 0.0, 1.0));
     }
 }

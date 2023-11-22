@@ -11,6 +11,7 @@ pub trait Shape {
     fn get_material(&self) -> Material;
     fn get_transform(&self) -> Matrice;
     fn normal_at(&self, world_point: Point) -> Option<Vector>;
+    fn get_shape_id(&self) -> String;
 }
 
 pub fn default_sphere() -> Box<dyn Shape> {

@@ -3,20 +3,20 @@ use std::rc::Rc;
 use super::{ray::Ray, shape::Shape};
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct Intersection<S: Shape> {
-    pub shape: Rc<S>,
+pub struct Intersection {
+    pub shape_id: String,
     pub t: f64,
 }
 
-impl<S: Shape> Intersection<S> {
-    pub fn new(shape: Rc<S>, t: f64) -> Self {
-        Intersection { shape, t }
+impl Intersection {
+    pub fn new(shape_id: String, t: f64) -> Self {
+        Intersection { shape_id, t }
     }
-    pub fn intersects(s: Rc<S>, r: &Ray) -> Option<Vec<Self>> {
+    pub fn intersects(s: &Box<dyn Shape>, r: &Ray) -> Option<Vec<Self>> {
         if let Some(intersects) = s.intersect(r) {
             let ixs: Vec<Self> = intersects
                 .iter()
-                .map(|t| Intersection::new(s.clone(), *t))
+                .map(|t| Intersection::new(s.get_shape_id(), *t))
                 .collect();
             return Some(ixs);
         }
@@ -24,11 +24,11 @@ impl<S: Shape> Intersection<S> {
     }
 }
 
-pub fn sort_intersections<S: Shape>(xs: &mut [Intersection<S>]) {
+pub fn sort_intersections(xs: &mut [Intersection]) {
     xs.sort_by(|a, b| a.t.total_cmp(&b.t));
 }
 
-pub fn hit<S: Shape>(xs: Vec<Intersection<S>>) -> Option<Intersection<S>> {
+pub fn hit(xs: Vec<Intersection>) -> Option<Intersection> {
     xs.into_iter().find(|i| i.t > 0.0)
 }
 
@@ -39,9 +39,9 @@ mod intersection_tests {
     #[test]
     fn intersection_encapsulates_t_and_object() {
         let sphere = Rc::new(Sphere::default());
-        let ix = Intersection::new(sphere.clone(), 3.5);
+        let ix = Intersection::new(sphere.get_shape_id(), 3.5);
         assert_eq!(ix.t, 3.5);
-        assert_eq!(sphere, ix.shape);
+        assert_eq!(sphere.get_shape_id(), ix.shape_id);
     }
 }
 
@@ -53,8 +53,8 @@ mod hit_tests {
     #[test]
     fn all_intersections_have_positive_t() {
         let sphere = Rc::new(Sphere::default());
-        let i1 = Intersection::new(sphere.clone(), 1.0);
-        let i2 = Intersection::new(sphere.clone(), 2.0);
+        let i1 = Intersection::new(sphere.get_shape_id(), 1.0);
+        let i2 = Intersection::new(sphere.get_shape_id(), 2.0);
         let mut xs = vec![i1, i2];
         sort_intersections(&mut xs);
         let i = hit(xs).unwrap();
@@ -63,8 +63,8 @@ mod hit_tests {
     #[test]
     fn some_intersections_have_negative_t() {
         let sphere = Rc::new(Sphere::default());
-        let i1 = Intersection::new(sphere.clone(), -1.0);
-        let i2 = Intersection::new(sphere.clone(), 1.0);
+        let i1 = Intersection::new(sphere.get_shape_id(), -1.0);
+        let i2 = Intersection::new(sphere.get_shape_id(), 1.0);
         let mut xs = vec![i1, i2];
         sort_intersections(&mut xs);
         let i = hit(xs).unwrap();
@@ -74,8 +74,8 @@ mod hit_tests {
     #[test]
     fn when_all_intersections_have_negative_t() {
         let sphere = Rc::new(Sphere::default());
-        let i1 = Intersection::new(sphere.clone(), -2.0);
-        let i2 = Intersection::new(sphere.clone(), -1.0);
+        let i1 = Intersection::new(sphere.get_shape_id(), -2.0);
+        let i2 = Intersection::new(sphere.get_shape_id(), -1.0);
         let mut xs = vec![i1, i2];
         sort_intersections(&mut xs);
         assert_eq!(None, hit(xs));
@@ -84,10 +84,10 @@ mod hit_tests {
     #[test]
     fn always_the_lowest_nonnegative_intersection() {
         let sphere = Rc::new(Sphere::default());
-        let i1 = Intersection::new(sphere.clone(), 5.0);
-        let i2 = Intersection::new(sphere.clone(), 7.0);
-        let i3 = Intersection::new(sphere.clone(), -3.0);
-        let i4 = Intersection::new(sphere.clone(), 2.0);
+        let i1 = Intersection::new(sphere.get_shape_id(), 5.0);
+        let i2 = Intersection::new(sphere.get_shape_id(), 7.0);
+        let i3 = Intersection::new(sphere.get_shape_id(), -3.0);
+        let i4 = Intersection::new(sphere.get_shape_id(), 2.0);
         let mut xs = vec![i1, i2, i3, i4];
         sort_intersections(&mut xs);
         assert_eq!(2.0, hit(xs).unwrap().t);
