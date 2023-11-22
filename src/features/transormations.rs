@@ -77,3 +77,45 @@ pub fn view_transformation(from: Vector, to: Vector, up: Vector) -> Matrice {
         ],
     } * translation(-from.position.x, -from.position.y, -from.position.z)
 }
+
+#[cfg(test)]
+mod view_transformation_tests {
+
+    use super::*;
+
+    #[test]
+    fn test_default_view() {
+        let from = Vector::new(0.0, 0.0, 0.0);
+        let to = Vector::new(0.0, 0.0, -1.0);
+        let up = Vector::new(0.0, 1.0, 0.0);
+        let t = view_transformation(from, to, up);
+        assert_eq!(t, Matrice::identity_matrix(4))
+    }
+
+    #[test]
+    fn test_positive_z_direction() {
+        let from = Vector::new(0.0, 0.0, 0.0);
+        let to = Vector::new(0.0, 0.0, 1.0);
+        let up = Vector::new(0.0, 1.0, 0.0);
+        let t = view_transformation(from, to, up);
+        assert_eq!(t, scaling(-1.0, 1.0, -1.0))
+    }
+
+    #[test]
+    fn test_moving_world() {
+        let from = Vector::new(0.0, 0.0, 8.0);
+        let to = Vector::new(0.0, 0.0, 0.0);
+        let up = Vector::new(0.0, 1.0, 0.0);
+        let t = view_transformation(from, to, up);
+        assert_eq!(t, translation(0.0, 0.0, -8.0))
+    }
+
+    #[test]
+    fn test_arbitrary_view() {
+        let from = Vector::new(1.0, 3.0, 2.0);
+        let to = Vector::new(4.0, -2.0, 8.0);
+        let up = Vector::new(1.0, 1.0, 0.0);
+        let t = view_transformation(from, to, up);
+        println!("{:?}", t);
+    }
+}
