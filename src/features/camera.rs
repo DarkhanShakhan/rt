@@ -1,4 +1,5 @@
-use super::{matrice::Matrice, point::Point, ray::Ray};
+use super::{canvas::Canvas, matrice::Matrice, point::Point, ray::Ray, world::World};
+use indicatif::ProgressBar;
 
 pub struct Camera {
     pub hsize: f64,
@@ -43,6 +44,19 @@ impl Camera {
         let origin = self.transform.inverse().unwrap() * Point::new(0.0, 0.0, 0.0);
         let direction = (pixel - origin).normalize();
         Ray::new(origin, direction)
+    }
+    pub fn render(&self, world: &World) -> Canvas {
+        let mut image = Canvas::new(self.hsize as usize, self.vsize as usize);
+        let bar = ProgressBar::new((self.vsize * self.hsize) as u64);
+        for y in 0..self.vsize as usize - 1 {
+            for x in 0..self.hsize as usize - 1 {
+                let ray = self.ray_for_pixel(x as f64, y as f64);
+                let color = world.color_at(&ray);
+                image.write_pixel(x, y, color);
+                bar.inc(1);
+            }
+        }
+        image
     }
 }
 
@@ -110,5 +124,25 @@ mod ray_for_pixel_tests {
             r.direction,
             Vector::new(2.0_f64.sqrt() / 2.0, 0.0, -(2.0_f64.sqrt() / 2.0))
         );
+    }
+}
+
+#[cfg(test)]
+mod render_tests {
+    use std::f64::consts::PI;
+
+    use crate::features::{color::Color, transormations::view_transformation, vector::Vector};
+
+    use super::*;
+    #[test]
+    fn test_render_world_with_camera() {
+        let world = World::default();
+        let mut camera = Camera::new(11.0, 11.0, PI / 2.0);
+        let from = Point::new(0.0, 0.0, -5.0);
+        let to = Point::new(0.0, 0.0, 0.0);
+        let up = Vector::new(0.0, 1.0, 0.0);
+        camera.transform = view_transformation(from, to, up);
+        let image = camera.render(&world);
+        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
 }
