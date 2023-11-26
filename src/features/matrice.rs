@@ -1,7 +1,5 @@
 use std::ops::Mul;
 
-use rand::prelude::*;
-
 use super::{point::Point, tuple::Tuple, vector::Vector};
 
 #[derive(PartialEq, Debug, Clone)]

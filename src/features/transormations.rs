@@ -1,4 +1,4 @@
-use super::{matrice::Matrice, point::Point, tuple::Tuple, vector::Vector};
+use super::{matrice::Matrice, point::Point, vector::Vector};
 
 pub fn translation(x: f64, y: f64, z: f64) -> Matrice {
     let mut out = Matrice::identity_matrix(4);

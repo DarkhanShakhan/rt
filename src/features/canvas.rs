@@ -11,14 +11,11 @@ impl Canvas {
         Canvas {
             width,
             height,
-            canvas: vec![vec![BLACK.clone(); width]; height],
+            canvas: vec![vec![BLACK; width]; height],
         }
     }
     pub fn write_pixel(&mut self, x: usize, y: usize, color: Color) {
         self.canvas[y][x] = color;
-    }
-    pub fn pixel_at(&self, x: usize, y: usize) -> Color {
-        self.canvas[y][x]
     }
 
     pub fn to_ppm(&self) {

@@ -1,5 +1,5 @@
 use super::{canvas::Canvas, matrice::Matrice, point::Point, ray::Ray, world::World};
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub struct Camera {
     pub hsize: f64,
@@ -143,6 +143,6 @@ mod render_tests {
         let up = Vector::new(0.0, 1.0, 0.0);
         camera.transform = view_transformation(from, to, up);
         let image = camera.render(&world);
-        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
+        assert_eq!(image.canvas[5][5], Color::new(0.38066, 0.47583, 0.2855));
     }
 }

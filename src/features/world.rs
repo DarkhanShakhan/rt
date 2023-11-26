@@ -1,14 +1,13 @@
 use super::{
     color::Color,
     computation::Computation,
-    consts::{BLACK, WHITE},
+    consts::BLACK,
     intersection::{hit, sort_intersections, Intersection},
     light::Light,
     material::Material,
-    matrice::Matrice,
     point::Point,
     ray::Ray,
-    shape::{self, sphere::Sphere, Shape},
+    shape::{sphere::Sphere, Shape},
     transormations::scaling,
 };
 use std::collections::HashMap;
@@ -35,8 +34,8 @@ impl World {
     pub fn intersect(&self, ray: &Ray) -> Option<Vec<Intersection>> {
         let mut result = vec![];
         if !self.objects.is_empty() {
-            for (shape_id, shape) in &self.objects {
-                if let Some(ixs) = Intersection::intersects(shape, ray) {
+            for shape in self.objects.values() {
+                if let Some(ixs) = Intersection::intersects(shape.as_ref(), ray) {
                     let mut ixs = ixs;
                     result.append(&mut ixs);
                 }
@@ -50,19 +49,38 @@ impl World {
     }
     pub fn shade_hit(&self, comps: &Computation) -> Color {
         let shape = self.objects.get(&comps.object_id).unwrap();
-        shape
-            .get_material()
-            .lighting(&self.light, &comps.point, &comps.eyev, &comps.normalv)
+        shape.get_material().lighting(
+            &self.light,
+            &comps.point,
+            &comps.eyev,
+            &comps.normalv,
+            self.is_shadowed(&comps.over_point),
+        )
     }
 
     pub fn color_at(&self, ray: &Ray) -> Color {
         if let Some(ixs) = self.intersect(ray) {
             if let Some(hit) = hit(ixs) {
-                let comps = Computation::new(&ray, &hit, self.objects.get(&hit.shape_id).unwrap());
+                let comps =
+                    Computation::new(ray, &hit, self.objects.get(&hit.shape_id).unwrap().as_ref());
                 return self.shade_hit(&comps);
             }
         }
         BLACK
+    }
+    pub fn is_shadowed(&self, point: &Point) -> bool {
+        let v = self.light.position - *point;
+        let distance = v.magnitude();
+        let direction = v.normalize();
+        let r = Ray::new(*point, direction);
+        if let Some(ixs) = self.intersect(&r) {
+            if let Some(h) = hit(ixs) {
+                if h.t < distance {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
 
@@ -72,14 +90,14 @@ impl Default for World {
             Point::new(-10.0, 10.0, -10.0),
             Color::new(1.0, 1.0, 1.0),
         ));
-        let mut s1: Box<dyn Shape> = Box::new(Sphere::default());
+        let mut s1: Box<dyn Shape> = Box::<Sphere>::default();
         s1.set_material(Material {
             color: Color::new(0.8, 1.0, 0.6),
             diffuse: 0.7,
             specular: 0.2,
             ..Default::default()
         });
-        let mut s2: Box<dyn Shape> = Box::new(Sphere::default());
+        let mut s2: Box<dyn Shape> = Box::<Sphere>::default();
         s2.set_transform(scaling(0.5, 0.5, 0.5));
         w.add_shape(s1);
         w.add_shape(s2);
@@ -89,7 +107,7 @@ impl Default for World {
 
 #[cfg(test)]
 mod world_tests {
-    use crate::features::{computation::Computation, vector::Vector};
+    use crate::features::{computation::Computation, transormations::translation, vector::Vector};
 
     use super::*;
     #[test]
@@ -108,8 +126,8 @@ mod world_tests {
     fn shade_intersection() {
         let w = World::default();
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let i = Intersection::new(w.keys[0].clone(), 4.0);
-        let comps = Computation::new(&r, &i, w.objects.get(&w.keys[0]).unwrap());
+        let i = Intersection::new(&w.keys[0], 4.0);
+        let comps = Computation::new(&r, &i, w.objects.get(&w.keys[0]).unwrap().as_ref());
         let c = w.shade_hit(&comps);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855));
     }
@@ -121,8 +139,8 @@ mod world_tests {
             ..Default::default()
         };
         let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
-        let i = Intersection::new(w.keys[1].clone(), 0.5);
-        let comps = Computation::new(&r, &i, w.objects.get(&w.keys[1]).unwrap());
+        let i = Intersection::new(&w.keys[1], 0.5);
+        let comps = Computation::new(&r, &i, w.objects.get(&w.keys[1]).unwrap().as_ref());
         let c = w.shade_hit(&comps);
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498));
     }
@@ -157,5 +175,45 @@ mod world_tests {
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), Vector::new(0.0, 0.0, -1.0));
         let c = w.color_at(&r);
         assert_eq!(c, first_color);
+    }
+    #[test]
+    fn no_shadow() {
+        let w = World::default();
+        let p = Point::new(0.0, 10.0, 0.0);
+        assert!(!w.is_shadowed(&p));
+    }
+    #[test]
+    fn shadow_when_object_between_point_and_light() {
+        let w = World::default();
+        let p = Point::new(10.0, -10.0, 10.0);
+        assert!(w.is_shadowed(&p));
+    }
+    #[test]
+    fn no_shadow_when_object_behind_light() {
+        let w = World::default();
+        let p = Point::new(-20.0, 20.0, -20.0);
+        assert!(!w.is_shadowed(&p));
+    }
+    #[test]
+    fn no_shadow_when_object_behind_point() {
+        let w = World::default();
+        let p = Point::new(-2.0, 2.0, -2.0);
+        assert!(!w.is_shadowed(&p));
+    }
+    #[test]
+    fn shade_hit_given_intersection_in_shadow() {
+        let mut w = World::new(Light::new(
+            Point::new(0.0, 0.0, -10.0),
+            Color::new(1.0, 1.0, 1.0),
+        ));
+        w.add_shape(Box::<Sphere>::default());
+        let mut s = Box::<Sphere>::default();
+        s.set_transform(translation(0.0, 0.0, 10.0));
+        w.add_shape(s);
+        let ray = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::new(0.0, 0.0, 1.0));
+        let i = Intersection::new(&w.keys[1], 4.0);
+        let comps = Computation::new(&ray, &i, w.objects.get(&w.keys[1]).unwrap().as_ref());
+        let c = w.shade_hit(&comps);
+        assert_eq!(c, Color::new(0.1, 0.1, 0.1));
     }
 }
