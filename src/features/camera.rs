@@ -1,5 +1,5 @@
 use super::{canvas::Canvas, matrice::Matrice, point::Point, ray::Ray, world::World};
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::ProgressBar;
 
 pub struct Camera {
     pub hsize: f64,

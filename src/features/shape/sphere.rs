@@ -1,8 +1,6 @@
-use uuid::Uuid;
-
-use crate::features::{material::Material, matrice::Matrice, point::Point, vector::Vector};
-
 use super::Shape;
+use crate::features::{material::Material, matrice::Matrice, point::Point, vector::Vector};
+use uuid::Uuid;
 
 #[derive(Debug, PartialEq)]
 pub struct Sphere {
@@ -28,21 +26,6 @@ impl Default for Sphere {
 }
 
 impl Shape for Sphere {
-    fn intersect(&self, r: &crate::features::ray::Ray) -> Option<Vec<f64>> {
-        let r = r.transform(&self.transform.inverse()?);
-        let sphere_to_ray = r.origin - Point::default();
-        let a = r.direction.dot_product(&r.direction);
-        let b = 2.0 * r.direction.dot_product(&sphere_to_ray);
-        let c = sphere_to_ray.dot_product(&sphere_to_ray) - 1.0;
-        let discriminant = b.powi(2) - 4.0 * a * c;
-        if discriminant < 0.0 {
-            return None;
-        }
-        let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
-        let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
-        Some(vec![t1, t2])
-    }
-
     fn set_transform(&mut self, transform: Matrice) {
         self.transform = transform;
     }
@@ -58,11 +41,22 @@ impl Shape for Sphere {
     fn get_shape_id(&self) -> String {
         self.id.clone()
     }
-    fn normal_at(&self, world_point: Point) -> Option<Vector> {
-        let object_point = self.transform.inverse()? * world_point;
-        let object_normal = object_point - Point::new(0.0, 0.0, 0.0);
-        let world_normal = self.transform.inverse()?.transpose() * object_normal;
-        Some(world_normal.normalize())
+    fn local_normal_at(&self, world_point: Point) -> Vector {
+        world_point - Point::new(0.0, 0.0, 0.0)
+    }
+
+    fn local_intersect(&self, r: &crate::features::ray::Ray) -> Option<Vec<f64>> {
+        let sphere_to_ray = r.origin - Point::default();
+        let a = r.direction.dot_product(&r.direction);
+        let b = 2.0 * r.direction.dot_product(&sphere_to_ray);
+        let c = sphere_to_ray.dot_product(&sphere_to_ray) - 1.0;
+        let discriminant = b.powi(2) - 4.0 * a * c;
+        if discriminant < 0.0 {
+            return None;
+        }
+        let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
+        let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
+        Some(vec![t1, t2])
     }
 }
 
