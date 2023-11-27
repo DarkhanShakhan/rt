@@ -102,7 +102,7 @@ mod ray_sphere_intersection_tests {
         consts::EPSILON,
         point::Point,
         shape::sphere::Sphere,
-        transormations::{scaling, translation},
+        transformations::{scaling, translation},
         vector::Vector,
     };
 

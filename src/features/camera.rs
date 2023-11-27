@@ -93,7 +93,7 @@ mod ray_for_pixel_tests {
     use std::f64::consts::PI;
 
     use crate::features::{
-        transormations::{rotation_y, translation},
+        transformations::{rotation_y, translation},
         vector::Vector,
     };
 
@@ -131,7 +131,7 @@ mod ray_for_pixel_tests {
 mod render_tests {
     use std::f64::consts::PI;
 
-    use crate::features::{color::Color, transormations::view_transformation, vector::Vector};
+    use crate::features::{color::Color, transformations::view_transformation, vector::Vector};
 
     use super::*;
     #[test]

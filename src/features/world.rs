@@ -8,7 +8,7 @@ use super::{
     point::Point,
     ray::Ray,
     shape::{sphere::Sphere, Shape},
-    transormations::scaling,
+    transformations::scaling,
 };
 use std::collections::HashMap;
 
@@ -107,7 +107,7 @@ impl Default for World {
 
 #[cfg(test)]
 mod world_tests {
-    use crate::features::{computation::Computation, transormations::translation, vector::Vector};
+    use crate::features::{computation::Computation, transformations::translation, vector::Vector};
 
     use super::*;
     #[test]

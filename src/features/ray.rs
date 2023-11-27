@@ -20,7 +20,7 @@ impl Ray {
 
 #[cfg(test)]
 mod ray_transformation_tests {
-    use crate::features::transormations::{scaling, translation};
+    use crate::features::transformations::{scaling, translation};
 
     use super::*;
 

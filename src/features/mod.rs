@@ -10,7 +10,7 @@ pub mod matrice;
 pub mod point;
 pub mod ray;
 pub mod shape;
-pub mod transormations;
+pub mod transformations;
 pub mod tuple;
 pub mod vector;
 pub mod world;

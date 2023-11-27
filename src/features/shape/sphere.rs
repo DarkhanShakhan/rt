@@ -113,7 +113,7 @@ mod sphere_intersects_tests {
 
 #[cfg(test)]
 mod sphere_shape_trait_tests {
-    use crate::features::transormations::translation;
+    use crate::features::transformations::translation;
 
     use super::*;
     #[test]
@@ -151,7 +151,7 @@ mod sphere_shape_trait_tests {
 mod normals_tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
-    use crate::features::transormations::{rotation_z, scaling, translation};
+    use crate::features::transformations::{rotation_z, scaling, translation};
 
     use super::*;
 
