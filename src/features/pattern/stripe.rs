@@ -5,8 +5,7 @@ use crate::features::{
     point::Point,
 };
 
-use super::Pattern;
-
+#[derive(Debug, PartialEq, Clone)]
 pub struct Stripe {
     a: Color,
     b: Color,
@@ -17,24 +16,21 @@ impl Stripe {
     pub fn new(a: Color, b: Color, transform: Matrice) -> Stripe {
         Self { a, b, transform }
     }
+    pub fn get_transform(&self) -> Matrice {
+        self.transform.clone()
+    }
+
+    pub fn at(&self, point: &Point) -> Color {
+        if point.position.x.floor() as i32 % 2 == 0 {
+            return self.a;
+        }
+        self.b
+    }
 }
 
 impl Default for Stripe {
     fn default() -> Self {
         Self::new(WHITE, BLACK, Matrice::identity_matrix(4))
-    }
-}
-
-impl Pattern for Stripe {
-    fn get_transform(&self) -> Matrice {
-        self.transform.clone()
-    }
-
-    fn at(&self, point: &Point) -> Color {
-        if point.position.x.floor() as i32 % 2 == 0 {
-            return self.a;
-        }
-        self.b
     }
 }
 

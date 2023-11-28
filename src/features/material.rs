@@ -2,7 +2,9 @@ use super::{
     color::Color,
     consts::{BLACK, WHITE},
     light::Light,
+    pattern::Pattern,
     point::Point,
+    shape::Shape,
     vector::Vector,
 };
 
@@ -13,27 +15,45 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub pattern: Option<Pattern>,
 }
 
 impl Material {
-    pub fn new(color: Color, ambient: f64, diffuse: f64, specular: f64, shininess: f64) -> Self {
+    pub fn new(
+        color: Color,
+        ambient: f64,
+        diffuse: f64,
+        specular: f64,
+        shininess: f64,
+        pattern: Option<Pattern>,
+    ) -> Self {
         Material {
             color,
             ambient,
             diffuse,
             specular,
             shininess,
+            pattern,
         }
     }
     pub fn lighting(
         &self,
         light: &Light,
+        object: &dyn Shape,
         point: &Point,
         eyev: &Vector,
         normalv: &Vector,
         in_shadow: bool,
     ) -> Color {
-        let effective_color = self.color * light.intensity;
+        let color = match &self.pattern {
+            Some(p) => match p.at_obj(object, point) {
+                Some(c) => c,
+                None => self.color,
+            },
+            None => self.color,
+        };
+
+        let effective_color = color * light.intensity;
         let lightv = (light.position - *point).normalize();
         let ambient = effective_color * self.ambient;
         let light_dot_normal = lightv.dot_product(normalv);
@@ -62,7 +82,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Material::new(WHITE, 0.1, 0.9, 0.9, 200.0)
+        Material::new(WHITE, 0.1, 0.9, 0.9, 200.0, None)
     }
 }
 
@@ -83,6 +103,8 @@ mod material_tests {
 
 #[cfg(test)]
 mod lighting_tests {
+    use crate::features::shape::sphere::Sphere;
+
     use super::*;
 
     #[test]
@@ -92,7 +114,14 @@ mod lighting_tests {
         let eyev = Vector::new(0.0, 0.0, -1.0);
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.9, 1.9, 1.9))
     }
 
@@ -103,7 +132,14 @@ mod lighting_tests {
         let eyev = Vector::new(0.0, 2.0_f64.sqrt() / 2.0, -(2.0_f64.sqrt() / 2.0));
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.0, 1.0, 1.0))
     }
     #[test]
@@ -113,7 +149,14 @@ mod lighting_tests {
         let eyev = Vector::new(0.0, 0.0, -1.0);
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            false,
+        );
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364))
     }
     #[test]
@@ -123,7 +166,14 @@ mod lighting_tests {
         let eyev = Vector::new(0.0, -(2.0_f64.sqrt() / 2.0), -(2.0_f64.sqrt() / 2.0));
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.6364, 1.6364, 1.6364))
     }
     #[test]
@@ -133,7 +183,14 @@ mod lighting_tests {
         let eyev = Vector::new(0.0, 0.0, -1.0);
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 0.0, 10.0), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            false,
+        );
         assert_eq!(result, Color::new(0.1, 0.1, 0.1))
     }
     #[test]
@@ -144,7 +201,14 @@ mod lighting_tests {
         let normalv = Vector::new(0.0, 0.0, -1.0);
         let light = Light::new(Point::new(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
         let in_shadow = true;
-        let result = m.lighting(&light, &position, &eyev, &normalv, in_shadow);
+        let result = m.lighting(
+            &light,
+            &Sphere::default(),
+            &position,
+            &eyev,
+            &normalv,
+            in_shadow,
+        );
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 }
