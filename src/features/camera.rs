@@ -1,5 +1,10 @@
-use super::{canvas::Canvas, matrice::Matrice, point::Point, ray::Ray, world::World};
+use super::{
+    canvas::Canvas, color::Color, consts::BLACK, matrice::Matrice, point::Point, ray::Ray,
+    world::World,
+};
 use indicatif::ProgressBar;
+extern crate rayon;
+use rayon::prelude::*;
 
 pub struct Camera {
     pub hsize: f64,
@@ -48,14 +53,17 @@ impl Camera {
     pub fn render(&self, world: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize as usize, self.vsize as usize);
         let bar = ProgressBar::new((self.vsize * self.hsize) as u64);
-        for y in 0..self.vsize as usize - 1 {
-            for x in 0..self.hsize as usize - 1 {
-                let ray = self.ray_for_pixel(x as f64, y as f64);
-                let color = world.color_at(&ray);
-                image.write_pixel(x, y, color);
-                bar.inc(1);
-            }
-        }
+        image
+            .canvas
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(y, row)| {
+                row.par_iter_mut().enumerate().for_each(|(x, pixel)| {
+                    let ray = self.ray_for_pixel(x as f64, y as f64);
+                    bar.inc(1);
+                    *pixel = world.color_at(&ray);
+                })
+            });
         image
     }
 }

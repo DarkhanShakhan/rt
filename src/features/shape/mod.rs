@@ -2,7 +2,7 @@ use super::{material::Material, matrice::Matrice, point::Point, ray::Ray, vector
 
 pub mod plane;
 pub mod sphere;
-pub trait Shape {
+pub trait Shape: Sync {
     fn intersect(&self, r: &Ray) -> Option<Vec<f64>> {
         self.local_intersect(&r.transform(&self.get_transform().inverse()?))
     }

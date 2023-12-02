@@ -64,7 +64,7 @@ pub fn draw_sphere() {
     world.add_shape(Box::new(middle));
     world.add_shape(Box::new(right));
     world.add_shape(Box::new(left));
-    let mut camera = Camera::new(300.0, 200.0, PI / 3.0);
+    let mut camera = Camera::new(800.0, 400.0, PI / 3.0);
     camera.transform = view_transformation(
         Point::new(0.0, 1.5, -5.0),
         Point::new(0.0, 1.0, 0.0),

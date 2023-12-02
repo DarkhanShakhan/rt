@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 indicatif = "0.17.6"
 rand = "0.8.4"
+rayon = "1.6"
+
 
 [dependencies.uuid]
 version = "1.6.1"
