@@ -127,8 +127,8 @@ impl Mul for Matrice {
 impl Mul<Vector> for Matrice {
     type Output = Vector;
     fn mul(self, rhs: Vector) -> Self::Output {
-        let tuple = vec![rhs.position.x, rhs.position.y, rhs.position.z, 0.0];
-        let mut out = vec![0.0; 4];
+        let tuple = [rhs.position.x, rhs.position.y, rhs.position.z, 0.0];
+        let mut out = [0.0; 4];
         for (ix, row) in self.matrice.iter().enumerate() {
             for (jx, col) in row.iter().enumerate() {
                 out[ix] += *col * tuple[jx];
@@ -141,8 +141,8 @@ impl Mul<Vector> for Matrice {
 impl Mul<Point> for Matrice {
     type Output = Point;
     fn mul(self, rhs: Point) -> Self::Output {
-        let tuple = vec![rhs.position.x, rhs.position.y, rhs.position.z, 1.0];
-        let mut out = vec![0.0; 4];
+        let tuple = [rhs.position.x, rhs.position.y, rhs.position.z, 1.0];
+        let mut out = [0.0; 4];
         for (ix, row) in self.matrice.iter().enumerate() {
             for (jx, col) in row.iter().enumerate() {
                 out[ix] += *col * tuple[jx];

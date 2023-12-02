@@ -26,6 +26,11 @@ impl World {
             keys: vec![],
         }
     }
+    pub fn add_shapes(&mut self, shapes: Vec<Box<dyn Shape>>) {
+        for shape in shapes {
+            self.add_shape(shape)
+        }
+    }
     pub fn add_shape(&mut self, shape: Box<dyn Shape>) {
         let id = shape.get_shape_id();
         self.objects.insert(id.clone(), shape);
@@ -51,6 +56,7 @@ impl World {
         let shape = self.objects.get(&comps.object_id).unwrap();
         shape.get_material().lighting(
             &self.light,
+            shape.as_ref(),
             &comps.point,
             &comps.eyev,
             &comps.normalv,

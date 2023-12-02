@@ -5,8 +5,7 @@ use crate::features::{
     point::Point,
 };
 
-use super::Pattern;
-
+#[derive(Debug, PartialEq, Clone)]
 pub struct Gradient {
     from: Color,
     to: Color,
@@ -21,22 +20,19 @@ impl Gradient {
             transform,
         }
     }
+    pub fn get_transform(&self) -> Matrice {
+        self.transform.clone()
+    }
+
+    pub fn at(&self, point: &Point) -> Color {
+        let distance = self.to - self.from;
+        let fraction = point.position.x - point.position.x.floor();
+        self.from + distance * fraction
+    }
 }
 
 impl Default for Gradient {
     fn default() -> Self {
         Self::new(WHITE, BLACK, Matrice::identity_matrix(4))
-    }
-}
-
-impl Pattern for Gradient {
-    fn get_transform(&self) -> Matrice {
-        self.transform.clone()
-    }
-
-    fn at(&self, point: &Point) -> Color {
-        let distance = self.to - self.from;
-        let fraction = point.position.x - point.position.x.floor();
-        self.from + distance * fraction
     }
 }

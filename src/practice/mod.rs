@@ -3,10 +3,11 @@ use std::f64::consts::PI;
 use crate::features::{
     camera::Camera,
     color::Color,
-    consts::WHITE,
+    consts::{BLACK, WHITE},
     light::Light,
     material::Material,
     matrice::Matrice,
+    pattern::{stripe::Stripe, Pattern},
     point::Point,
     shape::{plane::Plane, sphere::Sphere},
     transformations::{rotation_x, rotation_y, scaling, translation, view_transformation},
@@ -35,6 +36,11 @@ pub fn draw_sphere() {
             color: Color::new(0.1, 1.0, 0.5),
             diffuse: 0.7,
             specular: (0.3),
+            pattern: Some(Pattern::Stripe(Stripe::new(
+                BLACK,
+                WHITE,
+                scaling(0.5, 0.5, 0.5),
+            ))),
             ..Default::default()
         },
     );
@@ -58,15 +64,17 @@ pub fn draw_sphere() {
     );
     //add shapes function
     let mut world = World::new(Light::new(Point::new(-10.0, 10.0, -10.0), WHITE));
-    world.add_shape(Box::new(floor));
-    world.add_shape(Box::new(right_wall));
-    world.add_shape(Box::new(left_wall));
-    world.add_shape(Box::new(middle));
-    world.add_shape(Box::new(right));
-    world.add_shape(Box::new(left));
-    let mut camera = Camera::new(800.0, 400.0, PI / 3.0);
+    world.add_shapes(vec![
+        Box::new(floor),
+        Box::new(right_wall),
+        Box::new(left_wall),
+        Box::new(middle),
+        Box::new(right),
+        Box::new(left),
+    ]);
+    let mut camera = Camera::new(300.0, 200.0, PI / 4.0);
     camera.transform = view_transformation(
-        Point::new(0.0, 1.5, -5.0),
+        Point::new(1.0, 1.0, -4.0),
         Point::new(0.0, 1.0, 0.0),
         Vector::new(0.0, 1.0, 0.0),
     );
